@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的待办事项</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 20px; }
+        #app { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { text-align: center; }
+        #todo-input { width: 75%; padding: 8px; box-sizing: border-box; }
+        #add-btn { width: 20%; padding: 8px; background: #007bff; color: white; border: none; cursor: pointer; }
+        #todo-list { list-style: none; padding: 0; margin-top: 20px; }
+        li { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ddd; }
+        li.completed span { text-decoration: line-through; color: #888; }
+        .delete-btn { background: #dc3545; color: white; border: none; padding: 5px 8px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <h1>我的待办事项</h1>
+        <div>
+            <input type="text" id="todo-input" placeholder="添加新任务...">
+            <button id="add-btn">添加</button>
+        </div>
+        <ul id="todo-list">
+            </ul>
+    </div>
+
+    <script>
+        // API 的基础 URL (因为前端和后端在同一台服务器上，我们使用相对路径)
+        const API_URL = '/api/todos';
+
+        // 获取 DOM 元素
+        const todoList = document.getElementById('todo-list');
+        const todoInput = document.getElementById('todo-input');
+        const addBtn = document.getElementById('add-btn');
+
+        // --- 函数定义 ---
+
+        // 1. 获取并渲染所有 Todos (View)
+        async function fetchAndRenderTodos() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                const todos = data.todos;
+
+                // 清空当前列表
+                todoList.innerHTML = ''; 
+
+                // 重新渲染列表
+                todos.forEach(todo => {
+                    const li = document.createElement('li');
+                    li.className = todo.completed ? 'completed' : '';
+
+                    // 文本和复选框 (用于 Edit/Modify)
+                    li.innerHTML = `
+                        <input 
+                            type="checkbox" 
+                            ${todo.completed ? 'checked' : ''}
+                            onclick="toggleTodo(${todo.id}, ${!todo.completed})"
+                        >
+                        <span>${todo.text}</span>
+                        <button class="delete-btn" onclick="deleteTodo(${todo.id})">删除</button>
+                    `;
+                    todoList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("获取 Todos 失败:", error);
+            }
+        }
+
+        // 2. 添加 (Add) 新的 Todo
+        async function addTodo() {
+            const text = todoInput.value.trim();
+            if (text === '') return; // 不添加空任务
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+
+                todoInput.value = ''; // 清空输入框
+                fetchAndRenderTodos(); // 重新加载列表
+            } catch (error) {
+                console.error("添加 Todo 失败:", error);
+            }
+        }
+
+        // 3. 修改 (Edit / Toggle) Todo 的 'completed' 状态
+        async function toggleTodo(id, newCompletedState) {
+            try {
+                await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ completed: newCompletedState })
+                });
+
+                fetchAndRenderTodos(); // 重新加载列表
+            } catch (error) {
+                console.error("修改 Todo 失败:", error);
+            }
+        }
+
+        // 4. 删除 (Delete) Todo
+        async function deleteTodo(id) {
+            if (!confirm("确定要删除吗?")) return;
+
+            try {
+                await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                fetchAndRenderTodos(); // 重新加载列表
+            } catch (error) {
+                console.error("删除 Todo 失败:", error);
+            }
+        }
+
+        // --- 事件监听 ---
+
+        // 页面加载完成后，立即获取数据
+        document.addEventListener('DOMContentLoaded', fetchAndRenderTodos);
+
+        // 监听“添加”按钮点击
+        addBtn.addEventListener('click', addTodo);
+
+        // 监听在输入框按回车键
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTodo();
+            }
+        });
+
+    </script>
+</body>
+</html>
