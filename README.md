@@ -36,5 +36,4 @@ All API requests are automatically logged to `traffic.log` file with:
 - Response status code and duration
 - Timestamps for both request and response
 
-### TODO
-Read TODO in Code and follow the instruction to finish the set up
+Note: The log file can be deleted periodically to manage disk space.
