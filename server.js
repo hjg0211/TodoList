@@ -76,7 +76,6 @@ let todos = [
     { id: 2, text: "创建全栈应用", completed: false }
 ];
 let nextId = 3; // 用于生成下一个 ID
-let secretKey = 'your-secret-key';
 
 // --- API 路由 (Backend) ---
 
