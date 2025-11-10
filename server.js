@@ -83,8 +83,7 @@ let secretKey = 'your-secret-key';
 // GET /api/todos - 获取所有待办事项
 app.get('/api/todos', (req, res) => {
     res.json({
-        todos: todos,
-        secretKey: secretKey
+        todos: todos
     });
 });
 
